@@ -1,0 +1,1087 @@
+select distinct 
+
+  
+
+--ENTITY DATA 
+
+ENTITY.ENTITY_ID,	 
+
+ENTITY.ENTITY_NAME,	 
+
+ENTITY.ENTITY_COUNTRY_NAME,	 
+
+ENTITY.ENTITY_NAME_SHORT,	 
+
+ENTITY.ENTITY_REGION,	 
+
+ENTITY.ENTITY_REGION_SHORT, 
+
+company.CCNAME as ENTITY_DESCRIPTION, 
+
+  
+
+--ORDER DATA 
+
+salesorders.SDDOCO as ORDER_NUMBER, 
+
+CAST(salesorders.SDDCTO AS VARCHAR) + CAST(LTRIM(STR(salesorders.SDDOCO, 10, 0)) AS VARCHAR) as SO_ORDER_NUMBER, 
+
+salesorders.SDVR01 as CUSTOMER_PO, 
+
+salesorders.SDDOC as INVOICE_NUMBER, 
+
+legal_number.FHB76ELN as INVOICE_LEGAL_NUMBER, 
+
+salesorders.SDDCTO as ORDER_TYPE, 
+
+codevaluesorderty.DRDL01 as ORDER_TYPE_DESCRIPTION, 
+
+TRIM(salesorders.SDDCT) as DOCUMENT_TYPE_ID, 
+
+document_type.DRDL01 as DOCUMENT_TYPE_DESCRIPTION, 
+
+case when revenue.[ENTITY] is null then 'NO' else revenue.[ENTITY] end as REVENUE,  
+
+case when procare.[ENTITY] is null then 'NO' else procare.[ENTITY] end as REVENUE_PROCARE,  
+
+SDNXTR as NEXT_STATUS, 
+
+SDLTTR as LAST_STATUS,     
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDDGL) as DATE_GL, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDIVD) as DATE_INVOICE, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDTRDJ) as DATE_ORDER, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDRSDJ) as DATE_DELIVERY_PROMISSED, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDDRQJ) as  DATE_DELIVERY_REQUESTED, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDADDJ) as  DATE_SHIP, 
+
+salesorders.SDUORG as QTY, /*can be in each or pack*/ 
+
+(ISNULL(salesorders.SDUORG,0)) * ISNULL(UNIT_MEASURE.UMCONV / NULLIF(10000000, 0), 1) as UNIT_OF_MEASURE_QUANTITY, 
+
+case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end  AS CONVERSION_FACTOR, 
+
+salesorders.SDCRCD as CURRENCY_ID, 
+
+  
+
+--PRODUCT DATA 
+salesorders.SDLOTN as LOT_SERIAL_NUMBER,
+salesorders.SDITM as PRODUCT_JDE_ID, 
+
+itembranch.IBVEND as SUPPLIER_ID, 
+
+supplier.ABALPH as SUPPLIER_NAME, 
+
+salesorders.SDLITM as PRODUCT_ID_CATALOG, 
+
+salesorders.SDAITM as QAD_CATALOG_NUMBER, 
+
+itemmaster.IMDRAW as PRODUCT_GIM_ID, 
+
+itemmaster.IMDSC1 as PRODUCT_NAME_LONG, 
+
+itemmaster.IMSRTX as PRODUCT_NAME_SHORT, 
+
+GIM.BRAND as GIM_BRAND, 
+
+GIM.SUBBRAND as GIM_SUB_BRAND, 
+
+GIM.CYPRODUCTLINENAME as GIM_PRODUCT_LINE_NAME, 
+
+GIM.CYPRODUCTGROUP as GIM_PRODUCT_GROUP_NAME, 
+
+GIM.CYDIVISION as GIM_PRODUCT_DIVISION_NAME, 
+
+GIM.CYBUSINESSSECTOR as GIM_BUSINESS_SECTOR, 
+
+GIM.CYMARKETINGCODE as GIM_MARKETING_CODE, 
+
+GIM.CYMARKETINGPRODUCTGROUPNAME as GIM_PRODUCT_SUBGROUP_NAME, 
+
+GIM.CYFRANCHISEDESCRIPTION as GIM_FRANCHISE_NAME, 
+
+salesorders.SDUOM as UNIT_OF_MEASURE_ID, 
+
+codevaluesunitof_measure.DRDL01 as  UNIT_OF_MEASURE_NAME, 
+
+itemmaster.IMPRP1 as PRODUCT_LINE_ID, 
+
+salesorders.SDSRP5 as SDSRP5, 
+
+product_line.DRDL01 as PRODUCT_LINE_NAME, 
+
+salesorders.SDLNID as LINE_NUMBER_ID, 
+
+CAST(salesorders.SDMCU AS INT) as BRANCH_PLANT_ID, 
+
+branch_plant.MCDL01 as BRANCH_PLANT_NAME, 
+
+  
+
+--HFM DATA 
+
+CASE WHEN PRODUCT_LINEHFM.HFM_PRODUCT_LINE_ID IS NULL THEN '0' ELSE PRODUCT_LINEHFM.HFM_PRODUCT_LINE_ID end as HFM_PRODUCT_LINE_ID, 
+
+CASE WHEN PRODUCT_LINEHFM.HFM_PRODUCT_LINE_NAME IS NULL THEN 'No hierarchy' ELSE PRODUCT_LINEHFM.HFM_PRODUCT_LINE_NAME end as HFM_PRODUCT_LINE_NAME, 
+
+CASE WHEN PRODUCT_LINEHFM.HFM_FRANCHISE IS NULL THEN 'No hierarchy' else PRODUCT_LINEHFM.HFM_FRANCHISE end as HFM_FRANCHISE, 
+
+CASE WHEN PRODUCT_LINEHFM.HFM_BU IS NULL THEN 'No hierarchy' else PRODUCT_LINEHFM.HFM_BU end as HFM_BU, 
+
+CASE WHEN PRODUCT_LINEHFM.HFM_DIVISION IS NULL THEN 'No hierarchy' else PRODUCT_LINEHFM.HFM_DIVISION end as HFM_DIVISION, 
+
+  
+
+--CUSTOMER DATA 
+
+salesorders.SDSHAN as CUSTOMER_SHIP_TO_ID, 
+
+bookmastership.ABALPH as CUSTOMER_SHIP_TO_NAME, 
+
+TRIM(regionship_description_country.DRDL01) as CUSTOMER_SHIP_TO_COUNTRY, 
+
+TRIM(regionship_description_state.DRDL01) as CUSTOMER_SHIP_TO_STATE, 
+
+TRIM(regionship.ALCTY1) as CUSTOMER_SHIP_TO_CITY, 
+
+TRIM(regionship.ALADD1) as CUSTOMER_SHIP_TO_ADDRESS, 
+
+bookmastership.ABAC04 as GEO_REGION_SHIP, 
+
+salesorders.SDAN8 as CUSTOMER_SOLD_TO_ID, 
+
+bookmastersold.ABALPH as CUSTOMER_SOLD_TO_NAME, 
+
+TRIM(regionsold_description_country.DRDL01) as CUSTOMER_SOLD_TO_COUNTRY, 
+
+TRIM(regionsold_description_state.DRDL01) as CUSTOMER_SOLD_TO_STATE, 
+
+TRIM(regionsold.ALCTY1) as CUSTOMER_SOLD_TO_CITY, 
+
+TRIM(regionsold.ALADD1) as CUSTOMER_SOLD_TO_ADDRESS, 
+
+bookmastersold.ABAC04 as GEO_REGION_SOLD, 
+
+CASE WHEN bookmastership.ABAC10 in ('GOV','PUB') THEN 'PUBLIC'  
+
+ELSE 'PRIVATE' end as PUBLIC_PRIVATE_SHIP, 
+
+CASE WHEN bookmastersold.ABAC10 in ('GOV','PUB') THEN 'PUBLIC'  
+
+ELSE 'PRIVATE' end as PUBLIC_PRIVATE_SOLD, 
+
+codevalueslinbus.DRDL01 as CHANNEL_SUB_GROUP_SHIP, 
+
+codevalueslinbus_sold.DRDL01 as CHANNEL_SUB_GROUP_SOLD, 
+
+CASE WHEN bookmastership.ABAC13 in ('DST','AGT','AGD') THEN 'INDIRECT' 
+
+WHEN bookmastership.ABAC13 in ('INT') THEN 'INTERCOMPANY' 
+
+ELSE 'DIRECT' END AS CHANNEL_GROUP_SHIP, 
+
+CASE WHEN bookmastersold.ABAC13 in ('DST','AGT','AGD') THEN 'INDIRECT' 
+
+WHEN bookmastersold.ABAC13 in ('INT') THEN 'INTERCOMPANY' 
+
+ELSE 'DIRECT' END AS CHANNEL_GROUP_SOLD, 
+
+itembranch.IBPRP9 as MANUFACTURING_PLANT_ID, 
+
+manufactory_name.DRDL01 as MANUFACTURING_PLANT_NAME, 
+
+MANUFACTURING_PLANT_GROUP.MANUFACTURING_PLANT_GROUP, 
+
+  
+
+--COST (UNIT / TOTAL) 
+
+SDUNCS/10000 AS LC_UNIT_COST, 
+
+(SDUNCS/10000) * budge.[USD/LC] AS USD_UNIT_COST, 
+
+case when company.CCNAME ='Stryker Chile' then salesorders.SDECST 
+
+else salesorders.SDECST / 100 end as LC_TOTAL_COST, 
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDECST 
+
+else salesorders.SDECST / 100 end) * budge.[USD/LC] USD_TOTAL_COST, 
+
+TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0) as LC_UNIT_TP_COST, 
+
+(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * budge.[USD/LC] as USD_UNIT_TP_COST, 
+
+  
+
+			CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE ((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) end as LC_TOTAL_TP_COST, 
+
+  
+
+			(CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE ((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) end) * ISNULL(budge.[USD/LC], 0) as USD_TOTAL_TP_COST,  
+
+  
+
+LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0) as LC_UNIT_LANDING_COST, 
+
+  
+
+			CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE ((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)) * salesorders.SDUORG) end as LC_TOTAL_LANDING_COST, 
+
+  
+
+(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_LANDING_COST, 
+
+  
+
+			CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			(((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)) * ISNULL(budge.[USD/LC], 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE (((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)) * ISNULL(budge.[USD/LC], 0)) * salesorders.SDUORG) END as USD_TOTAL_LANDING_COST, 
+
+  
+
+  
+
+(ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))  as LC_UNIT_STANDARD_COST, /*LC_UNIT_TP_COST + LC_UNIT_LANDING_COST*/ 
+
+  
+
+			CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			(((ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE (((ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))) * salesorders.SDUORG) END as LC_TOTAL_STANDARD_COST, /*LC_UNIT_TP_COST + LC_UNIT_LANDING_COST*/ 
+
+  
+
+((ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_STANDARD_COST,  
+
+  
+
+  
+
+			(CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+			(((ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE (((ISNULL((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)),0) + ISNULL((LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0)),0))) * salesorders.SDUORG) END) * ISNULL(budge.[USD/LC], 0) as USD_TOTAL_STANDARD_COST,  
+
+  
+
+  
+
+  
+
+  
+
+((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0) as LC_UNIT_MANAGEMENT_COST, /*(LC_UNIT_TP_COST - LC_UNIT_UPI) + LC_UNIT_LANDING_COST*/ 
+
+(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_MANAGEMENT_COST,  
+
+  
+
+  
+
+										(CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) END) LC_TOTAL_MANAGEMENT_COST, /*(LC_UNIT_TP_COST - LC_UNIT_UPI) + LC_UNIT_LANDING_COST (case when UOM = PK then multiply by the pack quantity)*/ 
+
+  
+
+  
+
+										(CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) END) * ISNULL(budge.[USD/LC], 0) as USD_TOTAL_MANAGEMENT_COST, /*(LC_UNIT_TP_COST - LC_UNIT_UPI) + LC_UNIT_LANDING_COST (case when UOM = PK then multiply by the pack quantity)*/ 
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+(ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) - (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) as LC_UNIT_MATERIAL_COST, /*LC_UNIT_TP_COST - LC_UNIT_UPI*/ 
+
+((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * budge.[USD/LC]) - ((((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) * ISNULL(budge.[USD/LC], 0)) as USD_UNIT_MATERIAL_COST, 
+
+  
+
+  
+
+										(CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+										((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE ((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) end) 
+
+										- 
+
+										(CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) END) as LC_TOTAL_MATERIAL_COST, /*LC_TOTAL_TP_COST - LC_TOTAL_UPI*/ 
+
+  
+
+  
+
+										((CASE WHEN salesorders.SDUOM = 'PK' THEN 
+
+										((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE ((TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0)) * salesorders.SDUORG) end) * ISNULL(budge.[USD/LC], 0)) 
+
+										- 
+
+										((CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+										(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+										ELSE (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) END) * ISNULL(budge.[USD/LC], 0)) as USD_TOTAL_MATERIAL_COST, /*USD_TOTAL_TP_COST - USD_TOTAL_UPI*/ 
+
+  
+
+  
+
+  
+
+--PRICE (UNIT / TOTAL) 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) as LC_UNIT_PRICE_GROSS, 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_PRICE_GROSS, 
+
+CASE  
+
+WHEN ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) < 0 THEN 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) +  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+ELSE 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) -  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+END as LC_UNIT_PRICE, 
+
+  
+
+(CASE  
+
+WHEN ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) < 0 THEN 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) +  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+ELSE 
+
+ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) -  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+END ) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_PRICE, 
+
+  
+
+  
+
+case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end as GROSS_LC_SALES, 
+
+CASE  
+
+WHEN (case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) < 0 THEN 
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) +  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+ELSE 
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) -  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+END as LC_SALES, 
+
+  
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) * ISNULL(budge.[USD/LC], 0) as GROSS_USD_SALES, 
+
+(CASE  
+
+WHEN (case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) < 0 THEN 
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) +  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+ELSE 
+
+(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+else salesorders.SDAEXP / 100 end) -  
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+END) * ISNULL(budge.[USD/LC], 0) as USD_SALES, 
+
+  
+
+ISNULL(landing.LPPERCENT/NULLIF(100, 0),0) as LANDING_PERCENTAGE,    
+
+(ISNULL(MKUP.T3AMTU, 1) -1) as UPI_FACTOR,  
+
+  
+
+((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1) as LC_UNIT_UPI, /*(UPI -1) * LC_UNIT_TP_COST*/ 
+
+(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) * ISNULL(budge.[USD/LC], 0) as USD_UNIT_UPI,  
+
+  
+
+			CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+			(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) END as LC_TOTAL_UPI, /*LC_UNIT_UPI * QTY*/ 
+
+  
+
+  
+
+			(CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+			(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+			ELSE (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)  * salesorders.SDUORG) END) * ISNULL(budge.[USD/LC], 0) as USD_TOTAL_UPI, /*USD_UNIT_UPI * QTY*/ 
+
+  
+
+  
+
+(ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0)) - (((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) as LC_UNIT_MARGIN, /*LC_UNIT_PRICE - LC_UNIT_MANAGEMENT_COST*/ 
+
+  
+
+  
+
+(ISNULL(salesorders.SDUPRC/NULLIF(10000, 0),0) * ISNULL(budge.[USD/LC], 0)) - ((((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * ISNULL(budge.[USD/LC], 0)) as USD_UNIT_MARGIN, /*USD_UNIT_PRICE - USD_UNIT_MANAGEMENT_COST*/ 
+
+  
+
+	(CASE  
+
+	WHEN (case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) < 0 THEN 
+
+	(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) +  
+
+	(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
+	+ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
+	+ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
+	+ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
+	+ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
+	+ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
+	+ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+	ELSE 
+
+	(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) -  
+
+	(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
+	+ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
+	+ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
+	+ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
+	+ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
+	+ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
+	+ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+	END)  
+
+	- 
+
+	((CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+	(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+	ELSE  
+
+	(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) END)) as LC_TOTAL_MARGIN, /*LC_TOTAL_PRICE - LC_TOTAL_MANAGEMENT_COST*/ 
+
+  
+
+  
+
+	((CASE  
+
+	WHEN (case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) < 0 THEN 
+
+	(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) +  
+
+	(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
+	+ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
+	+ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
+	+ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
+	+ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
+	+ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
+	+ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+	ELSE 
+
+	(case when company.CCNAME ='Stryker Chile' then salesorders.SDAEXP 
+
+	else salesorders.SDAEXP / 100 end) -  
+
+	(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
+	+ ISNULL(CAST( invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0) --ICMS Diff Amount Destination 
+
+	+ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
+	+ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
+	+ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Tax 
+
+	+ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
+	+ ISNULL(CAST(pii.TDBRTXA/100 AS DECIMAL(18, 2)),0)) --Tax Amount PII 
+
+	END) * ISNULL(budge.[USD/LC], 0))  
+
+	- 
+
+	((CASE WHEN salesorders.SDUOM = 'PK' THEN  
+
+	(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) * case when (UNIT_MEASURE.UMCONV / 10000000) is null then 1 else (UNIT_MEASURE.UMCONV / 10000000) end 
+
+	ELSE  
+
+	(((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0) - ((ISNULL(TP_TABLE.FROZEN_COST_TP/NULLIF(10000, 0),0)) / (ISNULL(MKUP.T3AMTU, 1))) * (ISNULL(MKUP.T3AMTU, 1) -1)) + ISNULL(LANDING_TABLE.FROZEN_COST_LANDING/NULLIF(10000, 0),0)) * salesorders.SDUORG) END) * ISNULL(budge.[USD/LC], 0)) as USD_TOTAL_MARGIN, /*USD_TOTAL_PRICE - USD_TOTAL_MANAGEMENT_COST*/ 
+
+  
+
+  
+
+--TAX DETAIL 
+
+invoice.FDBICM/100 as TAX_BR_ICMS, 
+
+invoice.FDBIPI/100 as TAX_BR_IPI, 
+
+invoice.FDBISS/100 as TAX_BR_ISS, 
+
+invoice.FDPVRATE/1000 as TAX_BR_POVERTY_FUND, 
+
+invoice.FDBIRT/1000 as TAX_BR_IR, 
+
+invoice.FDDSAMT/100 as TAX_BR_DIFAL, 
+
+pii.TDBRTXB/100 as TAX_BR_BASIS_PIS, 
+
+pii.TDBRTXA/100 as TAX_BR_AMOUNT_PIS, 
+
+pii.TDBRTXR/1000 as TAX_BR_RATE_PIS, 
+
+coo.TDBRTXB/100 as TAX_BR_BASIS_COFINS, 
+
+coo.TDBRTXA/100 as TAX_BR_AMOUNT_COFINS, 
+
+coo.TDBRTXR/1000 as TAX_BR_RATE_COFINS, 
+
+(ISNULL(CAST( invoice.FDBICM/100 AS DECIMAL(18, 2)),0) --ICMS Tax 
+
++ ISNULL(CAST( invoice.FDBIPI/100 AS DECIMAL(18, 2)),0) --IPI Tax 
+
++ ISNULL(CAST( invoice.FDBISS/100 AS DECIMAL(18, 2)),0) --ISS Ta 
+
++ ISNULL(CAST( invoice.FDPVRATE/1000 AS DECIMAL(18, 2)),0) --Poverty Rate 
+
++ ISNULL(CAST( invoice.FDBIRT/1000 AS DECIMAL(18, 2)),0) --IR Tax 
+
++ ISNULL(CAST( pii.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount PII 
+
++ ISNULL(CAST( coo.TDBRTXA/100 AS DECIMAL(18, 2)),0) --Tax Amount COO 
+
++ ISNULL(CAST(invoice.FDDSAMT/100 AS DECIMAL(18, 2)),0)) as TAX_BR_AMOUNT, --ICMS Diff Amount Destination 
+
+  
+
+--FX DATA 
+
+budge.[USD/LC] as [FX_USD/LC], 
+
+budge.[LC/USD] as [FX_LC/USD] 
+
+  
+
+FROM [ANALYTICS-FINANCIAL-LATAM].[dbo].F42119 salesorders (nolock) 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F4102 itembranch (nolock) on CAST(salesorders.SDMCU AS INT) = CAST(itembranch.IBMCU AS INT) and salesorders.SDITM = itembranch.IBITM    -- Item Branch File  
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0010 company (nolock) on salesorders.SDKCOO = company.CCCO 
+
+			--innactivated cause now we are considering the cost for each year. 
+
+			--left join [ANALYTICS-FINANCIAL-LATAM].[dbo].[F30026_COST_EXTRACT] itemcost1 (nolock) on salesorders.SDITM = itemcost1.IEITM and salesorders.SDLITM = itemcost1.IELITM and TRIM(CONVERT(VARCHAR(255), salesorders.SDMCU)) = TRIM(CONVERT(VARCHAR(255),itemcost1.IEMMCU)) and itemcost1.IELEDG ='07' and itemcost1.IECOST='A1'  -- Item Cost Component Add-Ons 
+
+			--left join [ANALYTICS-FINANCIAL-LATAM].[dbo].[F30026_COST_EXTRACT] itemcost2 (nolock) on salesorders.SDITM = itemcost2.IEITM and salesorders.SDLITM = itemcost2.IELITM and TRIM(CONVERT(VARCHAR(255), salesorders.SDMCU)) = TRIM(CONVERT(VARCHAR(255),itemcost2.IEMMCU)) and itemcost2.IELEDG ='07' and itemcost2.IECOST='X1'  -- Item Cost Component Add-Ons 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0101 bookmastership (nolock) on salesorders.SDSHAN = bookmastership.ABAN8 -- address number 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0101 bookmastersold (nolock) on salesorders.SDAN8 = bookmastersold.ABAN8 -- address number 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0101 supplier (nolock) on itembranch.IBVEND = supplier.ABAN8 -- address number 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0116 regionship (nolock) on bookmastership.ABAN8 = regionship.ALAN8 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0116 regionsold (nolock) on bookmastersold.ABAN8 = regionsold.ALAN8 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevalueslinbus (nolock) on TRIM(bookmastership.ABAC13) = TRIM(codevalueslinbus.DRKY) and TRIM(codevalueslinbus.DRSY)='01' and TRIM(codevalueslinbus.DRRT) ='13' -- User Defined Code Values Lin bus description 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevalueslinbus_sold (nolock) on TRIM(bookmastersold.ABAC13) = TRIM(codevalueslinbus_sold.DRKY) and TRIM(codevalueslinbus_sold.DRSY)='01' and TRIM(codevalueslinbus_sold.DRRT) ='13' -- User Defined Code Values Lin bus description 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluesorderty (nolock) on TRIM(salesorders.SDDCTO) = TRIM(codevaluesorderty.DRKY) and TRIM(codevaluesorderty.DRSY)='00' and TRIM(codevaluesorderty.DRRT)='DT' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F4101 itemmaster (nolock) on salesorders.SDITM = itemmaster.IMITM 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluescommodity_class (nolock) on TRIM(itemmaster.IMPRP1) = TRIM(codevaluescommodity_class.DRKY) and TRIM(codevaluescommodity_class.DRSY)='41' and TRIM(codevaluescommodity_class.DRRT)='P1' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluescommodity_sub_class (nolock) on TRIM(salesorders.SDPRP2) = TRIM(codevaluescommodity_sub_class.DRKY) and TRIM(codevaluescommodity_sub_class.DRSY)='41' and TRIM(codevaluescommodity_sub_class.DRRT)='P2' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluessupplier_rebate_code (nolock) on TRIM(salesorders.SDPRP3) = TRIM(codevaluessupplier_rebate_code.DRKY) and TRIM(codevaluessupplier_rebate_code.DRSY)='41' and TRIM(codevaluessupplier_rebate_code.DRRT)='P3' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluesmaster_planning_family (nolock) on TRIM(salesorders.SDPRP4) = TRIM(codevaluesmaster_planning_family.DRKY) and TRIM(codevaluesmaster_planning_family.DRSY)='41' and TRIM(codevaluesmaster_planning_family.DRRT)='P4' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluespurchasing_category_code_5 (nolock) on TRIM(salesorders.SDPRP5) = TRIM(codevaluespurchasing_category_code_5.DRKY) and TRIM(codevaluespurchasing_category_code_5.DRSY)='41' and TRIM(codevaluespurchasing_category_code_5.DRRT)='P5' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevaluesunitof_measure (nolock) on TRIM(salesorders.SDUOM) = TRIM(codevaluesunitof_measure.DRKY) and TRIM(codevaluesunitof_measure.DRSY)='00' and TRIM(codevaluesunitof_measure.DRRT)='UM' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevalues_committedHS (nolock) on TRIM(salesorders.SDCOMM) = TRIM(codevalues_committedHS.DRKY) and TRIM(codevalues_committedHS.DRSY)='H42' and TRIM(codevalues_committedHS.DRRT)='CP' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 codevalues_document_type (nolock) on TRIM(salesorders.SDDCT) = TRIM(codevalues_document_type.DRKY) and TRIM(codevalues_document_type.DRSY)='00' and TRIM(codevalues_document_type.DRRT)='DT' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 document_type (nolock) on TRIM(salesorders.SDDCT) = TRIM(document_type.DRKY) and TRIM(document_type.DRSY)='00' and TRIM(document_type.DRRT)='DT' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 manufactory_name (nolock) on TRIM(itembranch.IBPRP9) = TRIM(manufactory_name.DRKY) and TRIM(manufactory_name.DRSY)='41' and TRIM(manufactory_name.DRRT)='02' -- User Defined Code Values orderType 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0006 branch_plant (nolock) on TRIM(salesorders.SDMCU) = TRIM(branch_plant.MCMCU) 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 product_line (nolock) on TRIM(itemmaster.IMPRP1) = TRIM(product_line.DRKY) and TRIM(product_line.DRSY)='41' and TRIM(product_line.DRRT)='P1' -- User Defined Code Values orderType 
+--replace to (itemmaster.IMPRP1)beacuse in the sales order table this order do not have product line associated (23019144) salesorders.SDPRP1
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 regionship_description_state (nolock) on TRIM(regionship.ALADDS) = TRIM(regionship_description_state.DRKY) and TRIM(regionship_description_state.DRSY)='00' and TRIM(regionship_description_state.DRRT) ='S' -- State regiondescription 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 regionsold_description_state (nolock) on TRIM(regionsold.ALADDS) = TRIM(regionsold_description_state.DRKY) and TRIM(regionsold_description_state.DRSY)='00' and TRIM(regionsold_description_state.DRRT) ='S' -- State regiondescription 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 regionship_description_country (nolock) on TRIM(regionship.ALCTR) = TRIM(regionship_description_country.DRKY) and TRIM(regionship_description_country.DRSY)='00' and TRIM(regionship_description_country.DRRT) ='CN' -- State regiondescription 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F0005 regionsold_description_country (nolock) on TRIM(regionsold.ALCTR) = TRIM(regionsold_description_country.DRKY) and TRIM(regionsold_description_country.DRSY)='00' and TRIM(regionsold_description_country.DRRT) ='CN' -- State regiondescription 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F41002 UNIT_MEASURE (nolock) on salesorders.SDITM = UNIT_MEASURE.UMITM and itemmaster.IMUOM1 = UNIT_MEASURE.UMRUM       
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_PRODUCT_LINE_HFM (nolock) PRODUCT_LINEHFM on itemmaster.IMPRP1 = PRODUCT_LINEHFM.ID 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_BUDGE_RATE BUDGE (nolock) on branch_plant.MCCO = BUDGE.ORDER_COMPANY 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_GIM (nolock) GIM on itemmaster.IMDRAW = GIM.ItemId 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_ORDER_TYPE_MAPPING (nolock) revenue on CONCAT(CAST(salesorders.SDKCOO AS INT),salesorders.SDDCTO) = revenue.ORDERCO_ORDERTYPE_2  
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_ORDER_TYPE_PROCARE (nolock) procare on CONCAT(CAST(salesorders.SDKCOO AS INT),salesorders.SDDCTO) = procare.ORDERCO_ORDERTYPE_2  
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_ENTITY (nolock) ENTITY on CAST(salesorders.SDKCOO AS INT) = ENTITY.ENTITY_ID 
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].STRYKER_DIME_MANUFACTURING_PLANT_GROUP (nolock) MANUFACTURING_PLANT_GROUP on itembranch.IBPRP9 = MANUFACTURING_PLANT_GROUP.MANUFACTURING_PLANT_ID 
+
+  
+
+left join ( 
+
+select  
+
+YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(MKUPTB.T3EFT)) T3EFT, 
+
+MKUPTB.T3KCO, 
+
+MKUPTB.T3AN8, 
+
+ISNULL(MKUPTB.T3AMTU/NULLIF(100, 0), 1) T3AMTU, 
+
+ROW_NUMBER() OVER(PARTITION BY YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(MKUPTB.T3EFT)), MKUPTB.T3KCO, MKUPTB.T3AN8  ORDER BY YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(MKUPTB.T3EFT)) ASC) AS Row#
+
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].F00092 MKUPTB 
+
+where T3SDB='MKUP' 
+
+) AS MKUP ON salesorders.SDKCOO = MKUP.T3KCO AND itembranch.IBVEND = MKUP.T3AN8 
+
+and T3EFT = YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(salesorders.SDDGL)) and Row#=1 --needed row number to consider only the first data. historical mkup data with errors in the past <=2021 
+
+  
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F554105X landing (nolock) on salesorders.SDKCOO = landing.LPCO and itemmaster.IMPRP1 = landing.LPPRP1 and salesorders.SDSRP5 = landing.LPSRP5 
+
+and TRIM(LPCATN) = YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(salesorders.SDDGL)) -- attention for this one. Multiples landing values by period. 
+
+  
+
+left join [ANALYTICS-FINANCIAL-LATAM].[dbo].F7611B (nolock) invoice on salesorders.SDDOCO = invoice.FDDOCO 
+
+and salesorders.SDITM = invoice.FDITM 
+
+and salesorders.SDDOC = invoice.FDDOC 
+
+and salesorders.SDLNID = invoice.FDLNID 
+
+  
+
+  
+
+left join (select  
+
+FHBNNF,  
+
+FHB76ELN,  
+
+ROW_NUMBER() OVER (PARTITION BY FHBNNF ORDER BY FHBNNF DESC) AS rn 
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].F76B01TE (nolock)) legal_number on invoice.FDBNNF = legal_number.FHBNNF and legal_number.rn=1 
+
+  
+
+left join ( 
+
+select  
+
+bttaxdetailpii.TDBNNF, 
+
+bttaxdetailpii.TDN001, 
+
+bttaxdetailpii.TDDCT, 
+
+bttaxdetailpii.TDUKID, 
+
+bttaxdetailpii.TDBRTX2, 
+
+bttaxdetailpii.TDBRTXB AS TDBRTXB, 
+
+bttaxdetailpii.TDBRTXA AS TDBRTXA, 
+
+bttaxdetailpii.TDBRTXR AS TDBRTXR, 
+
+bttaxdetailpii.TDUSER, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(TDUPMJ) AS "Date Updated", 
+
+ROW_NUMBER() OVER (PARTITION BY bttaxdetailpii.TDBNNF, bttaxdetailpii.TDUKID ORDER BY [ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(TDUPMJ) DESC) AS row_number 
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].F76B011 bttaxdetailpii 
+
+where  
+
+UPPER(TRIM(bttaxdetailpii.TDBRTX2))='PII' 
+
+AND (bttaxdetailpii.TDBRTXA > 0 OR bttaxdetailpii.TDBRTXA < 0) 
+
+) AS pii ON invoice.FDBNNF = pii.TDBNNF AND pii.row_number = 1 
+
+and invoice.FDUKID = pii.TDUKID 
+
+  
+
+left join ( 
+
+select  
+
+bttaxdetailcoo.TDBNNF, 
+
+bttaxdetailcoo.TDN001, 
+
+bttaxdetailcoo.TDDCT, 
+
+bttaxdetailcoo.TDUKID, 
+
+bttaxdetailcoo.TDBRTX2, 
+
+bttaxdetailcoo.TDBRTXB AS TDBRTXB, 
+
+bttaxdetailcoo.TDBRTXA AS TDBRTXA, 
+
+bttaxdetailcoo.TDBRTXR AS TDBRTXR, 
+
+bttaxdetailcoo.TDUSER, 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(TDUPMJ) AS "Date Updated", 
+
+ROW_NUMBER() OVER (PARTITION BY bttaxdetailcoo.TDBNNF, bttaxdetailcoo.TDUKID ORDER BY [ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(TDUPMJ) DESC) AS row_number 
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].F76B011 bttaxdetailcoo 
+
+where  
+
+UPPER(TRIM(bttaxdetailcoo.TDBRTX2))='COO' 
+
+AND (bttaxdetailcoo.TDBRTXA > 0 OR bttaxdetailcoo.TDBRTXA < 0) 
+
+) AS coo ON invoice.FDBNNF = coo.TDBNNF AND coo.row_number = 1 
+
+and invoice.FDUKID = coo.TDUKID 
+
+left join 
+
+(select  
+
+TRIM(CONVERT(VARCHAR(255),IEMMCU)) as IEMMCU, 
+
+IEITM as PRODUCT_JDE_ID, 
+
+IELITM as CATALOG_ID, 
+
+IELEDG, 
+
+IECOST, 
+
+case when IELEDG='18' then '2018' when IELEDG='19' then '2019' when IELEDG='20' then '2020' when IELEDG='21' then '2021' 
+
+when IELEDG='7A' then '2022' when IELEDG='7P' then '2023' when IELEDG='07' then '2024' end as COSTH_METH, 
+
+IECSL as FROZEN_COST_TP 
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].[F30026_COST_EXTRACT] 
+
+where  
+
+IECOST='A1' and  
+
+(case when IELEDG='18' then '2018' when IELEDG='19' then '2019' when IELEDG='20' then '2020' when IELEDG='21' then '2021' 
+
+when IELEDG='7A' then '2022' when IELEDG='7P' then '2023' when IELEDG='07' then '2024' end) is not null) TP_TABLE on  
+
+salesorders.SDITM = TP_TABLE.PRODUCT_JDE_ID and 
+
+salesorders.SDLITM = TP_TABLE.CATALOG_ID and  
+
+TRIM(CONVERT(VARCHAR(255), salesorders.SDMCU)) = TRIM(CONVERT(VARCHAR(255),TP_TABLE.IEMMCU)) and 
+
+YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(salesorders.SDDGL)) = TP_TABLE.COSTH_METH 
+left join 
+
+(select  
+
+TRIM(CONVERT(VARCHAR(255),IEMMCU)) as IEMMCU, 
+
+IEITM as PRODUCT_JDE_ID, 
+
+IELITM as CATALOG_ID, 
+
+IELEDG, 
+
+IECOST, 
+
+case when IELEDG='18' then '2018' when IELEDG='19' then '2019' when IELEDG='20' then '2020' when IELEDG='21' then '2021' 
+
+when IELEDG='7A' then '2022' when IELEDG='7P' then '2023' when IELEDG='07' then '2024' end as COSTH_METH, 
+
+IECSL as FROZEN_COST_LANDING 
+
+from [ANALYTICS-FINANCIAL-LATAM].[dbo].[F30026_COST_EXTRACT] 
+
+where  
+
+IECOST='X1' and  
+
+(case when IELEDG='18' then '2018' when IELEDG='19' then '2019' when IELEDG='20' then '2020' when IELEDG='21' then '2021' 
+
+when IELEDG='7A' then '2022' when IELEDG='7P' then '2023' when IELEDG='07' then '2024' end) is not null) LANDING_TABLE on  
+
+salesorders.SDITM = LANDING_TABLE.PRODUCT_JDE_ID and 
+
+salesorders.SDLITM = LANDING_TABLE.CATALOG_ID and  
+
+TRIM(CONVERT(VARCHAR(255), salesorders.SDMCU)) = TRIM(CONVERT(VARCHAR(255),LANDING_TABLE.IEMMCU)) and 
+
+YEAR([ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(salesorders.SDDGL)) = LANDING_TABLE.COSTH_METH 
+
+  
+
+WHERE 
+
+[ANALYTICS-FINANCIAL-LATAM].dbo.jde_date(SDDGL) is not null 
+and (revenue.ENTITY = 'yes' OR procare.ENTITY = 'yes')
+and salesorders.SDDSC1 not in ('ipi', 'icms', 'diferenttial','poverty found') 
